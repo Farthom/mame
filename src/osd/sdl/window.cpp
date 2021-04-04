@@ -452,13 +452,13 @@ void sdl_window_info::complete_destroy()
 //  pick_best_mode
 //============================================================
 
-osd_dim sdl_window_info::pick_best_mode()
+SDL_DisplayMode sdl_window_info::pick_best_mode()
 {
 	int minimum_width, minimum_height, target_width, target_height;
 	int i;
 	int num;
 	float size_score, best_score = 0.0f;
-	osd_dim ret(0,0);
+	SDL_DisplayMode ret;
 
 	// determine the minimum width/height for the selected target
 	target()->compute_minimum_size(minimum_width, minimum_height);
@@ -513,7 +513,7 @@ osd_dim sdl_window_info::pick_best_mode()
 			if (size_score > best_score)
 			{
 				best_score = size_score;
-				ret = osd_dim(mode.w, mode.h);
+				ret = mode;
 			}
 
 		}
@@ -549,8 +549,12 @@ void sdl_window_info::update()
 			}
 			else if (video_config.switchres)
 			{
-				osd_dim tmp = this->pick_best_mode();
-				resize(tmp.width(), tmp.height());
+				const SDL_DisplayMode betterMode = this->pick_best_mode();
+				
+				SDL_SetWindowFullscreen(platform_window(), 0);    // Try to set mode
+				SDL_SetWindowDisplayMode(platform_window(), &betterMode);    // Try to set mode
+				SDL_SetWindowFullscreen(platform_window(), SDL_WINDOW_FULLSCREEN);    // Try to set mode
+				renderer().notify_changed();
 			}
 		}
 
@@ -609,6 +613,7 @@ void sdl_window_info::update()
 int sdl_window_info::complete_create()
 {
 	osd_dim temp(0,0);
+	SDL_DisplayMode tempMode;
 
 	// clear out original mode. Needed on OSX
 	if (fullscreen())
@@ -618,7 +623,10 @@ int sdl_window_info::complete_create()
 
 		// if we're allowed to switch resolutions, override with something better
 		if (video_config.switchres)
-			temp = pick_best_mode();
+		{
+			tempMode = pick_best_mode();
+			temp = osd_dim(tempMode.w, tempMode.h);
+		}
 	}
 	else if (m_windowed_dim.width() > 0)
 	{

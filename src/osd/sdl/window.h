@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <memory>
 #include <list>
+#include <SDL2/SDL.h>
 
 
 //============================================================
@@ -88,7 +89,7 @@ private:
 	osd_dim get_min_bounds(int constrain);
 	osd_dim get_max_bounds(int constrain);
 	void update_cursor_state();
-	osd_dim pick_best_mode();
+	SDL_DisplayMode pick_best_mode();
 	void set_fullscreen(int afullscreen) { m_fullscreen = afullscreen; }
 
 	// monitor info
